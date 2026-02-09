@@ -1,1 +1,116 @@
+Kali Linux ↔ Metasploitable
+Network Reconnaissance & Defensive Awareness Lab
+Lab Purpose: This lab was conducted to understand how insecure network exposure looks from a defender’s perspective, using Kali Linux and the intentionally vulnerable Metasploitable VM in an isolated VirtualBox environment.
+The goal was not exploitation, but to build situational awareness:
+1) What traffic is allowed by default?
+2) What services are exposed before scanning?
+3) What visibility (logs) a real system should provide
+4) How defenders reason before an attack ever succeeds
 
+Lab Environment
+Attacker / Observer: Kali Linux
+Target: Metasploitable2
+Virtualization: VirtualBox
+Network Mode: Host‑Only Adapter (vboxnet0)
+Subnet: 192.168.56.0/24
+
+Host‑only networking was used to:
+1) Isolate the lab from the real network
+2) Ensure full visibility of traffic
+3) Avoid exposing vulnerable services externally
+4) Key Defensive Questions (Before Scanning)
+
+Before running any scans, the lab focused on answering three blue‑team questions:
+1)What traffic would be allowed by default on a real server?
+2)What services might reasonably be exposed?
+3)What logs should already exist before exploitation?
+This pause is deliberate. Defense begins before the first scan.
+
+>>>>>What Traffic Is Allowed by Default
+On a real, well‑managed server, almost nothing is allowed by default.
+A sane baseline posture looks like:
+1) Inbound traffic: deny all
+2) Explicit allows: only required services (e.g. 80/443, limited SSH)
+3) Outbound traffic: restricted or closely monitored
+4) ICMP: allowed selectively, rate‑limited, and logged
+
+Metasploitable violates this posture intentionally. It allows:
+1) Broad inbound connections
+2) Legacy and insecure protocols
+3) Weakly protected services
+4) Minimal or nonexistent firewalling
+
+
+>>>>>Hardened Server Expectations
+A defensive assumption before scanning would be:
+1) One primary service (e.g. web)
+2) One restricted management plane
+3) Everything else disabled or firewalled
+
+>>>>>Metasploitable Reality
+Service discovery revealed numerous exposed services, including:
+1) FTP, Telnet, SSH
+2) SMTP, DNS, HTTP
+3) RPC, SMB, NFS
+4) Databases (MySQL, PostgreSQL)
+5) Remote admin interfaces (VNC, X11)
+6) Legacy and intentionally vulnerable daemons
+
+Every running service is a promise you must keep secure.
+Attackers don’t care what a service does — only that it answers.
+
+>>>>>Network Reconnaissance Results
+
+1) Host Discovery : nmap -sn 192.168.56.0/24
+This confirmed:
+  i) Active hosts on the subnet
+
+  ii) ARP and ICMP reachability
+
+  iii) A functioning virtual network
+
+Even this step is reconnaissance and would be logged or alerted on in a real environment.
+
+2) TCP SYN Scan : nmap -sS -T4 192.168.56.4
+Key observation: Not shown: 977 closed tcp ports (reset)
+This indicates:
+  i) The host actively responds to probes
+  ii) No meaningful firewalling
+  iii) No packet dropping or rate limiting
+
+A hardened system would:
+  i) Drop packets silently
+  ii) Slow responses
+iii) Trigger alerts before enumeration completes
+iv) Why Metasploitable Is “Noisy”
+
+
+>>>>>Logging Expectations on a Real Server
+
+A production system should have memory at multiple layers:
+A) Network-Level Logs
+  1) Firewall allow/deny events
+  2) Connection attempts
+  3) ICMP activity
+  4) Rate‑limit triggers
+
+B) Host-Level Logs
+  1) Authentication attempts
+  2) Service start/stop events
+  3) Privilege escalation attempts
+  4)Crashes and abnormal behavior
+
+C) Application-Level Logs
+  1) HTTP access and error logs
+  2) Unexpected input patterns
+  3) Repeated failures or enumeration attempts
+
+No logs = no memory = no defense
+
+Defense begins before the first packet is sent.
+
+Key Takeaways
+1) Most compromises are enabled by exposure, not brilliance
+2) Attackers succeed long before exploitation if no one is watching
+3) Reducing attack surface matters more than blocking exploits
+4) Visibility and prioritization are core blue‑team skills
